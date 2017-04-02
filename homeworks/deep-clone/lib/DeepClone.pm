@@ -38,45 +38,65 @@ use DDP;
 
 sub clone {
 	my $orig = shift;
-	#my $num = 10;
-	#my $orig = \$num;
-=for comment	
-	my $orig = {
-		key1 => "string",
-		key2 => [2, 4, 'a'],
-		key3 => {
-			nested => "value",
-			"key\0" => [1, 2]
-		}
-	};
-=cut
-	my @source;
-	my @result;
-	my @ref;
-	my $i = 0;
-	$source[$i] = $orig;
+	#p $orig;
 	my $cloned;
 	
-	if ( !ref($source[$i])) {
-		$cloned = $source[$i];
-	}	
-	else {
-		given (ref($source[$i])) {
-
-			when ("HASH") {
-				$ref [$i] = {%{$source [$i]}}; 
-				foreach (keys %{$source [$i]}) {
+	sub reccur {
+		my ($source) = shift;
+		my $result;
+		my $sign = 0;
+		if ( !ref($source)) {
+			$result = $source;
+		}	
+		else {
+			given (ref($source)) {
+				when ("HASH") {
+					$result = {%{$source}}; 
+					for my $var (keys %{$result}) {
+						if ($source->{$var} ne $source) {
+							my @arr = reccur($result->{$var});
+                                                        if ($arr[1] == 1) { $sign = 1}
+							$result->{$var} = $arr[0];
+						}
+						else {
+							$result->{$var} = $result;
+						}
+					}
+				}
+				when("ARRAY") {
+					$result = [@{$source}];
+					my $i = 0;
+					for my $var (@{$result}) {
+						if ($source->[$i] ne $source) {
+							my @arr = reccur($var);
+							if ($arr[1] == 1) { $sign = 1}
+							$result->[$i] = $arr[0];
+							$i++;
+						}
+						else {
+							$result->[$i] = $result;
+						}
+					}
+				}
+				when("CODE") {
+					$sign = 1;
+					undef $result;
 					
 				}
+			
 			}
-
-			when("ARRAY") {$ref [$i]  = [@{$source [$i]}] }
+			
+			
 		}
-		$cloned = $ref [0];
+		return $result, $sign;
 	}
-	#p %$cloned;
+	
+	my @arr = reccur($orig);	
+	if ($arr[1] == 0) {$cloned = $arr[0]}
+	#p $cloned;
 	return $cloned;
 }
+
 #clone;
 
 1;
