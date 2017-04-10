@@ -49,11 +49,10 @@ sub clone {
 			$result = $source;
 		}	
 		else {
-			given (ref($source)) {
-				when ("HASH") {
+			if (ref($source) eq "HASH") {
 					$result = {%{$source}}; 
 					for my $var (keys %{$result}) {
-						if ($source->{$var} ne $source) {
+						if (exists $source->{$var} and $source->{$var} ne $source) {
 							my @arr = reccur($result->{$var});
                                                         if ($arr[1] == 1) { $sign = 1}
 							$result->{$var} = $arr[0];
@@ -63,7 +62,7 @@ sub clone {
 						}
 					}
 				}
-				when("ARRAY") {
+			elsif( ref($source) eq "ARRAY") {
 					$result = [@{$source}];
 					my $i = 0;
 					for my $var (@{$result}) {
@@ -78,15 +77,12 @@ sub clone {
 						}
 					}
 				}
-				when("CODE") {
+			elsif( ref($source) eq "CODE") {
 					$sign = 1;
 					undef $result;
 					
 				}
-			
-			}
-			
-			
+						
 		}
 		return $result, $sign;
 	}
