@@ -40,54 +40,63 @@ sub clone {
 	my $orig = shift;
 	#p $orig;
 	my $cloned;
+	my $ref_hash = {};
 	
 	sub reccur {
-		my ($source) = shift;
+		my $source = shift;
+		my $ref_hash = shift;
 		my $result;
 		my $sign = 0;
+		
 		if ( !ref($source)) {
 			$result = $source;
 		}	
 		else {
 			if (ref($source) eq "HASH") {
-					$result = {%{$source}}; 
-					for my $var (keys %{$result}) {
-						if (exists $source->{$var} and $source->{$var} ne $source) {
-							my @arr = reccur($result->{$var});
-                                                        if ($arr[1] == 1) { $sign = 1}
-							$result->{$var} = $arr[0];
-						}
-						else {
-							$result->{$var} = $result;
-						}
+				$result = {%{$source}};
+				$ref_hash -> { $source } = $result; 
+				for my $var (keys %{$result}) {
+					if (my @temp = grep{$_ eq $source->{$var}} keys %$ref_hash) {
+						#$| = 1;	
+						#print "$temp[0]\n";
+						$result->{$var} = $ref_hash -> {$temp[0]};
+					}
+					else {	
+						my @arr = reccur($result->{$var},$ref_hash);
+                                                       if ($arr[1] == 1) { $sign = 1}
+			 					$result->{$var} = $arr[0];
 					}
 				}
+			}
 			elsif( ref($source) eq "ARRAY") {
-					$result = [@{$source}];
-					my $i = 0;
-					for my $var (@{$result}) {
-						if ($source->[$i] ne $source) {
-							my @arr = reccur($var);
-							if ($arr[1] == 1) { $sign = 1}
-							$result->[$i] = $arr[0];
-							$i++;
+				$result = [@{$source}];
+				$ref_hash -> {$source}  = $result;
+				my $i = 0;
+				for my $var (@{$result}) {
+					if (my @temp = grep{$_ eq $source->[$i]} keys %$ref_hash) {
+						$result->[$i] = $ref_hash -> {$temp[0]};
+						#print "$temp[0]\n";
+					}
+					else {
+						my @arr = reccur($var,$ref_hash);
+						if ($arr[1] == 1) { 
+							$sign = 1
 						}
-						else {
-							$result->[$i] = $result;
-						}
+						$result->[$i] = $arr[0];
+						$i++;
 					}
 				}
+			}
 			elsif( ref($source) eq "CODE") {
-					$sign = 1;
-					undef $result;
-					
-				}
+				$sign = 1;
+				undef $result;	
+			}
 						
 		}
 		return $result, $sign;
 	}
 	
-	my @arr = reccur($orig);	
+	my @arr = reccur($orig, $ref_hash);	
 	if ($arr[1] == 0) {$cloned = $arr[0]}
 	#p $cloned;
 	return $cloned;
