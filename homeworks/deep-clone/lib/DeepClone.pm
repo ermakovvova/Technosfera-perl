@@ -36,72 +36,89 @@ use DDP;
 
 =cut
 
+my $ref_hash = {};
+#my $ref_sign->{sign} = 0;
+
 sub clone {
+	$| = 1;
 	my $orig = shift;
+
+	#my $sign = 
 	#p $orig;
 	my $cloned;
-	my $ref_hash = {};
+	#print "sign = $sign\n";
+	#if ($sign == 1) {
+	#	return undef $cloned;
+	#}
+	#my $ref_hash = {};
 	
-	sub reccur {
-		my $source = shift;
-		my $ref_hash = shift;
-		my $result;
+	#sub reccur {
+		#my $source = shift;
+		#my $ref_hash = shift;
+		#my $result;
 		my $sign = 0;
 		
-		if ( !ref($source)) {
-			$result = $source;
+		if ( !ref($orig)) {
+			$cloned = $orig;
 		}	
 		else {
-			if (ref($source) eq "HASH") {
-				$result = {%{$source}};
-				$ref_hash -> { $source } = $result; 
-				for my $var (keys %{$result}) {
-					if (my @temp = grep{$_ eq $source->{$var}} keys %$ref_hash) {
-						#$| = 1;	
-						#print "$temp[0]\n";
-						$result->{$var} = $ref_hash -> {$temp[0]};
+			if (ref($orig) eq "HASH") {
+				$cloned = {%{$orig}};
+				$ref_hash -> { $orig } = $cloned; 
+				for my $var (keys %{$cloned}) {
+					if ($ref_hash-> {$orig-> {$var}}) {
+						$cloned->{$var} = $ref_hash-> {$orig->{$var}} ;
 					}
 					else {	
-						my @arr = reccur($result->{$var},$ref_hash);
-                                                       if ($arr[1] == 1) { $sign = 1}
-			 					$result->{$var} = $arr[0];
+						$cloned->{$var} = clone($cloned-> {$var});
+						#$sign++;
+						if ((!(defined $cloned->{$var}) )  and (defined $orig->{$var} )) {
+							$| = 1;
+							print "sub\n";
+							return (undef $cloned);
+						}
+						
 					}
 				}
 			}
-			elsif( ref($source) eq "ARRAY") {
-				$result = [@{$source}];
-				$ref_hash -> {$source}  = $result;
+			elsif( ref($orig) eq "ARRAY") {
+				$cloned = [@{$orig}];
+				$ref_hash -> {$orig}  = $cloned;
 				my $i = 0;
-				for my $var (@{$result}) {
-					if (my @temp = grep{$_ eq $source->[$i]} keys %$ref_hash) {
-						$result->[$i] = $ref_hash -> {$temp[0]};
-						#print "$temp[0]\n";
+				for my $var (@{$cloned}) {
+					if ($ref_hash-> {$orig->[$i]}) {
+						$cloned->[$i] = $ref_hash -> {$orig-> [$i]};
 					}
 					else {
-						my @arr = reccur($var,$ref_hash);
-						if ($arr[1] == 1) { 
-							$sign = 1
-						}
-						$result->[$i] = $arr[0];
+						#my @arr = clone($var); #,$ref_hash);
+						$cloned->[$i] = clone($var);
 						$i++;
+						#$sign++;
+						if ((!(defined $cloned->[$i]))  and (defined $orig->[$i]) ) {
+						#	print "test\n";
+							return (undef $cloned);
+						}
 					}
 				}
 			}
-			elsif( ref($source) eq "CODE") {
-				$sign = 1;
-				undef $result;	
+			elsif( ref($orig) eq "CODE") {
+				#$ref_hash->{sign} = 1;
+				#print "sign= $sign\n"; 
+				return (undef $cloned);	
 			}
-						
 		}
-		return $result, $sign;
+	#p $orig;
+	#p $ref_hash;
+=for comment
+	if (wantarray) {
+		return $cloned, $sign;
 	}
-	
-	my @arr = reccur($orig, $ref_hash);	
-	if ($arr[1] == 0) {$cloned = $arr[0]}
-	#p $cloned;
-	return $cloned;
+	eleif (defined wantarray){
+		return $cloned;
+	}
+=cut
+p $cloned;
+return $cloned;
+
 }
-
-#clone;
-
 1;
