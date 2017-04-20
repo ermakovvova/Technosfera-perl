@@ -42,21 +42,8 @@ my $ref_hash = {};
 sub clone {
 	$| = 1;
 	my $orig = shift;
-
-	#my $sign = 
-	#p $orig;
 	my $cloned;
-	#print "sign = $sign\n";
-	#if ($sign == 1) {
-	#	return undef $cloned;
-	#}
-	#my $ref_hash = {};
-	
-	#sub reccur {
-		#my $source = shift;
-		#my $ref_hash = shift;
-		#my $result;
-		my $sign = 0;
+	my $sign = 0;
 		
 		if ( !ref($orig)) {
 			$cloned = $orig;
@@ -71,11 +58,9 @@ sub clone {
 					}
 					else {	
 						$cloned->{$var} = clone($cloned-> {$var});
-						#$sign++;
-						if ((!(defined $cloned->{$var}) )  and (defined $orig->{$var} )) {
-							$| = 1;
-							print "sub\n";
-							return (undef $cloned);
+						if ( !defined $cloned->{$var}  and  defined $orig->{$var} ) {
+							undef $cloned;
+							return  $cloned;
 						}
 						
 					}
@@ -90,25 +75,21 @@ sub clone {
 						$cloned->[$i] = $ref_hash -> {$orig-> [$i]};
 					}
 					else {
-						#my @arr = clone($var); #,$ref_hash);
 						$cloned->[$i] = clone($var);
-						$i++;
-						#$sign++;
-						if ((!(defined $cloned->[$i]))  and (defined $orig->[$i]) ) {
-						#	print "test\n";
-							return (undef $cloned);
+						if ( !defined $cloned->[$i]   and defined $orig->[$i]  ) {	
+							undef $cloned;
+							return  $cloned;
+						
 						}
+						$i++;
 					}
 				}
 			}
 			elsif( ref($orig) eq "CODE") {
-				#$ref_hash->{sign} = 1;
-				#print "sign= $sign\n"; 
-				return (undef $cloned);	
+				undef $cloned; 
+				return  $cloned;	
 			}
 		}
-	#p $orig;
-	#p $ref_hash;
 =for comment
 	if (wantarray) {
 		return $cloned, $sign;
@@ -117,7 +98,7 @@ sub clone {
 		return $cloned;
 	}
 =cut
-p $cloned;
+#p $cloned;
 return $cloned;
 
 }
